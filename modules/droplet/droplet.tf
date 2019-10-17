@@ -16,17 +16,19 @@ variable "public_tcp_ports" {
     default = []
 }
 
-variable "domain" {
-    default = ""
+variable "inbound_services" {
+    default = []
 }
+
 
 variable "cnames" {
     default = []
 }
 
-locals {
-    domain = (var.domain != "" ? var.domain : "${var.name}.${var.zone}")
+variable "tags" {
+    default = []
 }
+
 
 
 
@@ -38,12 +40,28 @@ resource "digitalocean_droplet" "drop" {
   ipv6               = true
   count              = var.number
   private_networking = false
-  tags = [
-      "${var.name}"
-  ]
+  tags = concat(["${var.name}"], var.tags)
   ssh_keys = [
     "c9:37:26:2e:b3:7c:f1:56:1f:72:f0:61:98:61:ed:65",
   ]
+  provisioner "remote-exec" {
+      connection {
+          type = "ssh"
+          user = "root"
+          private_key = file("~/.ssh/id_rsa")
+          host = digitalocean_droplet.drop[count.index].ipv4_address
+      }
+      inline = [
+          "apt-get update",
+          "apt-get -y upgrade",
+          "apt-get install -y mosh curl python3-dev python3-pip python-dev python-pip apt-transport-https ca-certificates gnupg-agent software-properties-common",
+          "apt-get remove docker docker-engine docker.io containerd runc",
+          "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -",
+          "add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
+          "apt-get update",
+          "apt-get install -y docker-ce docker-ce-cli containerd.io"
+      ]
+  }
 }
 
 resource "digitalocean_firewall" "drop" {
@@ -86,6 +104,16 @@ resource "digitalocean_firewall" "drop" {
       }
   }
 
+  dynamic "inbound_rule" {
+      for_each = var.inbound_services
+      content {
+        protocol = inbound_rule.value["protocol"]
+        port_range = inbound_rule.value["port_range"]
+        source_tags = inbound_rule.value["source_tags"]
+    }
+  }
+
+
   inbound_rule {
     protocol         = "tcp"
     port_range       = "22"
@@ -102,22 +130,11 @@ resource "digitalocean_firewall" "drop" {
 
 resource "ns1_record" "domain" {
   zone   = var.zone
-  domain = local.domain
+  domain = format("%s%02g.%s", var.name, count.index + 1, var.zone)
   type   = "A"
   ttl    = 60
   answers {
-    answer = digitalocean_droplet.drop[0].ipv4_address
+    answer = digitalocean_droplet.drop[count.index].ipv4_address
   }
+  count = var.number
 }
-
-resource "ns1_record" "cname" {
-  zone   = var.zone
-  domain = var.cnames[count.index]
-  type   = "CNAME"
-  ttl    = 60
-  answers {
-    answer = local.domain
-  }
-  count = length(var.cnames)
-}
-
