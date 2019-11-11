@@ -29,12 +29,14 @@ variable "tags" {
     default = []
 }
 
-
+variable "size" {
+    default = "s-1vcpu-1gb"
+}
 
 
 resource "digitalocean_droplet" "drop" {
   name               = "${var.name}0${count.index + 1}"
-  size               = "s-1vcpu-1gb"
+  size               = var.size
   image              = "ubuntu-18-04-x64"
   region             = var.region
   ipv6               = true
@@ -137,4 +139,17 @@ resource "ns1_record" "domain" {
     answer = digitalocean_droplet.drop[count.index].ipv4_address
   }
   count = var.number
+}
+
+resource "ns1_record" "type_domain" {
+    zone = var.zone
+    domain = format("%s.%s", var.name, var.zone)
+    type = "A"
+    ttl = 60
+    dynamic "answers" {
+        for_each = digitalocean_droplet.drop
+        content {
+            answer = answers.value["ipv4_address"]
+        }
+    }
 }

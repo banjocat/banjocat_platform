@@ -6,7 +6,7 @@ provider "ns1" {
 }
 
 ## Main zones
-resource "ns1_zone" "giantdino" {
+resource "ns1_zone" "peanut" {
   zone = "peanutbutter.dev"
   ttl  = 60
 }
