@@ -1,0 +1,24 @@
+- name: update cache
+  apt:
+    update_cache: yes
+
+- name: install awesome packages
+  apt:
+    pkg:
+      - curl
+      - python3-dev
+      - python3-pip
+      - python-dev
+      - python-pip
+      - apt-transport-https
+      - ca-certificates
+      - gnupg-agent
+      - software-properties-common
+      - mosh
+      - nmap
+
+- name: install pips
+  pip:
+    name: netaddr
+  tags: python
+

@@ -1,0 +1,3 @@
+consul_node_role: server
+nomad_node_role: both
+

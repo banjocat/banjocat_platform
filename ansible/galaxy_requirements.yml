@@ -1,0 +1,4 @@
+- src: brianshumate.consul
+- src: brianshumate.nomad
+- src: brianshumate.vault
+- src: geerlingguy.docker

@@ -1,0 +1,24 @@
+---
+
+- name:  install python
+  hosts: platform,control
+  become: yes
+  gather_facts: false
+  tasks:
+    - raw: apt install -y python-minimal 
+
+- name: setup the base
+  hosts: platform,control
+  become: yes
+  roles:
+    - role: base
+      tags: base
+    - role: geerlingguy.docker
+      tags: docker
+    - role: brianshumate.consul
+      tags: consul
+    - role: brianshumate.nomad
+      tags: nomad
+    - role: brianshumate.vault
+      tags: vault
+

@@ -5,6 +5,10 @@ variable "number" {
 variable "name" {
 }
 
+variable "groups" {
+    default = []
+}
+
 variable "zone" {
 }
 
@@ -35,7 +39,7 @@ variable "size" {
 
 
 resource "digitalocean_droplet" "drop" {
-  name               = "${var.name}0${count.index + 1}"
+  name               = format("%s%02g", var.name, count.index + 1)
   size               = var.size
   image              = "ubuntu-18-04-x64"
   region             = var.region
@@ -46,32 +50,12 @@ resource "digitalocean_droplet" "drop" {
   ssh_keys = [
     "c9:37:26:2e:b3:7c:f1:56:1f:72:f0:61:98:61:ed:65",
   ]
-  provisioner "remote-exec" {
-      connection {
-          type = "ssh"
-          user = "root"
-          private_key = file("~/.ssh/id_rsa")
-          host = digitalocean_droplet.drop[count.index].ipv4_address
-      }
-      inline = [
-          "apt-get update",
-          "apt-get -y upgrade",
-          "apt-get install -y mosh curl python3-dev python3-pip python-dev python-pip apt-transport-https ca-certificates gnupg-agent software-properties-common",
-          "apt-get remove docker docker-engine docker.io containerd runc",
-          "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -",
-          "add-apt-repository \"deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\"",
-          "apt-get update",
-          "apt-get install -y docker-ce docker-ce-cli containerd.io"
-      ]
-  }
 }
 
 resource "digitalocean_firewall" "drop" {
   name = var.name
 
-  tags = [
-    var.name,
-  ]
+  tags = concat([var.name], var.groups)
 
   droplet_ids = digitalocean_droplet.drop.*.id
 
@@ -128,6 +112,7 @@ resource "digitalocean_firewall" "drop" {
     port_range       = "60000-61000"
     source_addresses = ["0.0.0.0/0", "::/0"]
   }
+  depends_on = [digitalocean_droplet.drop]
 }
 
 resource "ns1_record" "domain" {
@@ -139,6 +124,7 @@ resource "ns1_record" "domain" {
     answer = digitalocean_droplet.drop[count.index].ipv4_address
   }
   count = var.number
+  depends_on = [digitalocean_droplet.drop]
 }
 
 resource "ns1_record" "type_domain" {
@@ -152,4 +138,5 @@ resource "ns1_record" "type_domain" {
             answer = answers.value["ipv4_address"]
         }
     }
+  depends_on = [digitalocean_droplet.drop]
 }

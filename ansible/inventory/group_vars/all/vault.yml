@@ -1,0 +1,6 @@
+vault_version: 1.2.4
+vault_user: root
+vault_backend: consul
+vault_consul: 127.0.0.1:8500
+vault_port: 8200
+

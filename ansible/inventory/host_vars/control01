@@ -1,0 +1,3 @@
+consul_node_role: bootstrap
+nomad_bootstrap_expect: 1
+        

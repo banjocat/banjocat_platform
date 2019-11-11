@@ -1,0 +1,11 @@
+[consul_instances:children]
+control
+
+[nomad_instances:children]
+control
+
+[vault_instances:children]
+control
+
+# nothing here yet
+[platform]

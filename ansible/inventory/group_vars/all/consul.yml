@@ -1,0 +1,16 @@
+consul_version: 1.6.1
+consul_user: root
+consul_group: root
+consul_datacenter: "{{ datacenter }}"
+consul_log_level: WARN
+consul_syslog_enable: true
+consul_ports:
+  dns: -1
+  http: 8500
+  https: -1
+  rpc: -1
+  grpc: -1
+  serf_lan: 8301
+  serf_wan: 8302
+  server: 8300
+
