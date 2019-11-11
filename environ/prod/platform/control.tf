@@ -5,10 +5,26 @@ module "control" {
     zone = ns1_zone.peanut.zone
     number = 3
     inbound_services = [
-        # nomad
+        # nomad tcp
+        {
+            protocol = "tcp"
+            port_range = 4646
+            source_tags = ["control"]
+        },
         {
             protocol = "tcp"
             port_range = 4647
+            source_tags = ["control"]
+        },
+        {
+            protocol = "tcp"
+            port_range = 4648
+            source_tags = ["control"]
+        },
+        # nomad udp
+        {
+            protocol = "udp"
+            port_range = 4648
             source_tags = ["control"]
         },
         # consul tcp
